@@ -1,0 +1,110 @@
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.dialog-box {
+    background-color: rgba(0, 0, 0, 0.9);
+    border: 2px solid #C3B1E1;
+    border-radius: 12px;
+    padding: 30px;
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+    color: #C3B1E1;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #C3B1E1;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.close-button:hover {
+    color: #d6c7ef;
+}
+
+.dialog-box h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 24px;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #C3B1E1;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #C3B1E1;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #d6c7ef;
+    box-shadow: 0 0 5px #C3B1E1;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 12px;
+    background-color: black;
+    color: #C3B1E1;
+    border: 1px solid #C3B1E1;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #C3B1E1;
+    color: black;
+}
+
+.switch-mode {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+}
+
+.switch-button {
+    background: none;
+    border: none;
+    color: #C3B1E1;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+.switch-button:hover {
+    color: #d6c7ef;
+}
