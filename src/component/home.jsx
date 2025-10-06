@@ -333,6 +333,10 @@ const Home = () => {
     setIsUserProfileOpen(true);
   };
 
+  const handleLeaderboardClick = () => {
+    navigate("/leaderboard");
+  };
+
   return (
     <div className="home-container">
       {/* Sidebar */}
@@ -342,6 +346,9 @@ const Home = () => {
         </button>
         <button onClick={handleChatButtonClick} className="sidebar-button">
           💡 Evaluate My Idea
+        </button>
+        <button onClick={handleLeaderboardClick} className="sidebar-button">
+          🏆 Leaderboard
         </button>
       </div>
 

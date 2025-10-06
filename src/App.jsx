@@ -6,6 +6,7 @@ import OutputCard from "./component/outputcard";
 import Home from "./component/home";
 import Features from "./component/Features";
 import Dashboard from "./component/Dashboard";
+import Leaderboard from "./component/Leaderboard";
 
 const App = () => {
   const [botDictionary, setBotDictionary] = useState(null);
@@ -17,6 +18,7 @@ const App = () => {
           <Route path="/" element={<Home />} />
           <Route path="/features" element={<Features />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
           <Route
             path="/chat"
             element={

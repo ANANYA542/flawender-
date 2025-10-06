@@ -30,12 +30,12 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Authentication routes
+
 app.post("/api/auth/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Check if user already exists
+  
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -44,11 +44,11 @@ app.post("/api/auth/signup", async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    // Hash password
+
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create user
+
     const user = await prisma.user.create({
       data: {
         name,
@@ -57,7 +57,7 @@ app.post("/api/auth/signup", async (req, res) => {
       },
     });
 
-    // Generate JWT token
+
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name },
       JWT_SECRET,
@@ -121,7 +121,6 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// Ideas routes
 app.post("/api/ideas", authenticateToken, async (req, res) => {
   try {
     const { Description, Verdict, Positive, Negative } = req.body;
@@ -314,7 +313,7 @@ app.post("/api/ideas/:ideaId/comment", authenticateToken, async (req, res) => {
   }
 });
 
-// Leaderboard route
+
 app.get("/api/ideas/leaderboard", async (req, res) => {
   try {
     const { period = "all" } = req.query;
@@ -366,16 +365,10 @@ app.get("/api/ideas/leaderboard", async (req, res) => {
       },
     });
 
-    // Calculate engagement score and sort
-    const ideasWithScore = ideas
-      .map((idea) => ({
-        ...idea,
-        engagementScore: idea.likes.length * 3 + idea.comments.length * 1,
-      }))
-      .sort((a, b) => b.engagementScore - a.engagementScore);
-
-    // Take top 10
-    const topIdeas = ideasWithScore.slice(0, 10);
+    // Sort by highest liked ideas
+    const topIdeas = ideas
+      .sort((a, b) => b.likes.length - a.likes.length)
+      .slice(0, 10);
 
     res.json({ ideas: topIdeas });
   } catch (error) {
@@ -448,7 +441,7 @@ app.post("/api/users/:userId/follow", authenticateToken, async (req, res) => {
     }
 
     if (targetUser.isPrivate) {
-      // Check if request already exists
+
       const existingRequest = await prisma.followRequest.findUnique({
         where: {
           sender_id_receiver_id: {
@@ -462,7 +455,7 @@ app.post("/api/users/:userId/follow", authenticateToken, async (req, res) => {
         return res.status(400).json({ error: "Follow request already sent" });
       }
 
-      // Create follow request
+
       await prisma.followRequest.create({
         data: {
           sender_id: followerId,
@@ -508,7 +501,7 @@ app.delete("/api/users/:userId/follow", authenticateToken, async (req, res) => {
   }
 });
 
-// Follow request management
+
 app.get("/api/follow-requests", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -555,7 +548,7 @@ app.post(
         return res.status(404).json({ error: "Request not found" });
       }
 
-      // Create follow relationship
+   
       await prisma.follow.create({
         data: {
           follower_id: request.sender_id,
@@ -563,7 +556,7 @@ app.post(
         },
       });
 
-      // Update request status
+     
       await prisma.followRequest.update({
         where: { id: parseInt(requestId) },
         data: { status: "accepted" },
@@ -606,7 +599,6 @@ app.post(
   }
 );
 
-// Get user's followers and following
 app.get("/api/users/:userId/followers", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -655,7 +647,6 @@ app.get("/api/users/:userId/following", async (req, res) => {
   }
 });
 
-// Chat system routes
 app.get("/api/chats", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -712,7 +703,7 @@ app.post("/api/chats", authenticateToken, async (req, res) => {
     const { participantId } = req.body;
     const userId = req.user.userId;
 
-    // Check if chat already exists between these users
+
     const existingChat = await prisma.chat.findFirst({
       where: {
         isGroup: false,
@@ -728,7 +719,7 @@ app.post("/api/chats", authenticateToken, async (req, res) => {
       return res.json({ chat: existingChat });
     }
 
-    // Create new chat
+
     const chat = await prisma.chat.create({
       data: {
         participants: {
@@ -762,7 +753,7 @@ app.get("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
     const { chatId } = req.params;
     const userId = req.user.userId;
 
-    // Verify user is participant
+
     const participant = await prisma.chatParticipant.findFirst({
       where: {
         chat_id: parseInt(chatId),
@@ -802,7 +793,7 @@ app.post("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
     const { content } = req.body;
     const userId = req.user.userId;
 
-    // Verify user is participant
+
     const participant = await prisma.chatParticipant.findFirst({
       where: {
         chat_id: parseInt(chatId),

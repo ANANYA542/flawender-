@@ -244,20 +244,20 @@
 }
 
 .idea-title {
-  color: white;
+  color: black;
   font-size: 1.3rem;
   font-weight: 700;
   margin: 0;
 }
 
 .idea-author {
-  color: rgba(255, 255, 255, 0.7);
+  color: black;
   font-size: 0.9rem;
   font-weight: 500;
 }
 
 .idea-description {
-  color: rgba(255, 255, 255, 0.9);
+  color: black;
   font-size: 1rem;
   line-height: 1.6;
   margin: 1rem 0;
@@ -269,6 +269,7 @@
   border-radius: 15px;
   margin: 1rem 0;
   border-left: 4px solid #feca57;
+  color: black;
 }
 
 .idea-verdict strong {
@@ -333,7 +334,7 @@
 }
 
 .idea-date {
-  color: rgba(255, 255, 255, 0.6);
+  color: black;
   font-size: 0.8rem;
   text-align: right;
   margin-top: 1rem;
