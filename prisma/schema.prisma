@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 model User{
@@ -40,10 +40,10 @@ model User{
 }
 model Idea{
   id Int @id @unique @default(autoincrement())
-  Description String @db.Text
-  Verdict String @db.Text
-  Positive String @db.Text
-  Negative String @db.Text
+  Description String
+  Verdict String
+  Positive String
+  Negative String
   user_id Int 
   user User @relation(fields:[user_id], references:[id],onDelete:Cascade)
   likes Like[]
@@ -61,7 +61,7 @@ model Like{
 }
 model Comment{
   id Int @id @unique @default(autoincrement())
-  text String @db.Text
+  text String
   user_id Int
   idea_id Int
   user User @relation(fields:[user_id], references:[id],onDelete:Cascade)
@@ -111,7 +111,7 @@ model ChatParticipant{
 
 model Message{
   id Int @id @unique @default(autoincrement())
-  content String @db.Text
+  content String
   chat_id Int
   sender_id Int
   receiver_id Int?

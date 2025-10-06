@@ -6,12 +6,12 @@ import prisma from "./src/lib/prisma.js";
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const API_BASE_URL = "http://localhost:5001/api";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-
 // Auth middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers["authorization"];
@@ -381,6 +381,35 @@ app.get("/api/ideas/leaderboard", async (req, res) => {
   } catch (error) {
     console.error("Leaderboard error:", error);
     res.status(500).json({ error: "Failed to fetch leaderboard" });
+  }
+});
+
+// Users route
+app.get("/api/users", authenticateToken, async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        _count: {
+          select: {
+            ideas: true,
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    res.json({ users });
+  } catch (error) {
+    console.error("Fetch users error:", error);
+    res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
