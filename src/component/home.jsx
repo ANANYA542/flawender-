@@ -280,16 +280,7 @@ const Home = () => {
   };
 
   const handleCardClick = (idea) => {
-    if (typeof idea.id === 'string' && idea.id.startsWith('example-')) {
-      setSelectedIdea(idea);
-    } else {
-      navigate(`/idea/${idea.id}`, {
-        state: {
-          analysis: `Description:\n${idea.description}\n\nHonest Verdict Tagline:\n"${idea.verdict}"`,
-          userInput: idea.title,
-        },
-      });
-    }
+    setSelectedIdea(idea);
   };
 
   const closeIdeaModal = () => {
