@@ -365,7 +365,6 @@ app.get("/api/ideas/leaderboard", async (req, res) => {
       },
     });
 
-    // Sort by highest liked ideas
     const topIdeas = ideas
       .sort((a, b) => b.likes.length - a.likes.length)
       .slice(0, 10);
@@ -377,7 +376,7 @@ app.get("/api/ideas/leaderboard", async (req, res) => {
   }
 });
 
-// Users route
+
 app.get("/api/users", authenticateToken, async (req, res) => {
   try {
     const users = await prisma.user.findMany({
