@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int       @id @unique @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  bio       String?
+  isPrivate Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  idea      Idea[]
+  likes     Like[]
+  comments  Comment[]
+
+  // Follow relationships
+  following Follow[] @relation("UserFollowing")
+  followers Follow[] @relation("UserFollowers")
+
+  // Follow requests
+  sentRequests     FollowRequest[] @relation("RequestSender")
+  receivedRequests FollowRequest[] @relation("RequestReceiver")
+
+  // Chat relationships
+  sentMessages     Message[]         @relation("MessageSender")
+  receivedMessages Message[]         @relation("MessageReceiver")
+  chatParticipants ChatParticipant[]
+}
+
+model Idea {
+  id          Int       @id @unique @default(autoincrement())
+  Description String
+  Verdict     String
+  Positive    String
+  Negative    String
+  user_id     Int
+  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  likes       Like[]
+  comments    Comment[]
+  createdAt   DateTime  @default(now())
+}
+
+model Like {
+  id        Int      @id @unique @default(autoincrement())
+  user_id   Int
+  idea_id   Int
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([user_id, idea_id])
+}
+
+model Comment {
+  id        Int      @id @unique @default(autoincrement())
+  text      String
+  user_id   Int
+  idea_id   Int
+  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model Follow {
+  id           Int      @id @unique @default(autoincrement())
+  follower_id  Int
+  following_id Int
+  follower     User     @relation("UserFollowing", fields: [follower_id], references: [id], onDelete: Cascade)
+  following    User     @relation("UserFollowers", fields: [following_id], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([follower_id, following_id])
+}
+
+model FollowRequest {
+  id          Int      @id @unique @default(autoincrement())
+  sender_id   Int
+  receiver_id Int
+  status      String   @default("pending") // pending, accepted, rejected
+  sender      User     @relation("RequestSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver    User     @relation("RequestReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([sender_id, receiver_id])
+}
+
+model Chat {
+  id           Int               @id @unique @default(autoincrement())
+  name         String?
+  isGroup      Boolean           @default(false)
+  createdAt    DateTime          @default(now())
+  participants ChatParticipant[]
+  messages     Message[]
+}
+
+model ChatParticipant {
+  id       Int      @id @unique @default(autoincrement())
+  chat_id  Int
+  user_id  Int
+  joinedAt DateTime @default(now())
+  chat     Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([chat_id, user_id])
+}
+
+model Message {
+  id          Int      @id @unique @default(autoincrement())
+  content     String
+  chat_id     Int
+  sender_id   Int
+  receiver_id Int?
+  chat        Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)
+  sender      User     @relation("MessageSender", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver    User?    @relation("MessageReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}

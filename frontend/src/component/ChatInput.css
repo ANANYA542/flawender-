@@ -1,0 +1,236 @@
+/* Full page layout for the chat section */
+.chat-section {
+  min-height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, var(--beige-50) 0%, var(--beige-100) 50%, var(--beige-50) 100%);
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+/* Background video that covers the entire screen */
+.chat-background-video {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  filter: sepia(0.4) brightness(1.2);
+}
+
+/* Chat container centered in the page */
+.chat-container {
+  width: 100%;
+  max-width: 900px;
+  height: 80vh;
+  background-color: var(--neutral-white);
+  border: 2px solid var(--beige-300);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  z-index: 1;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Messages area with auto scrolling */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  background: linear-gradient(to bottom, var(--beige-50), transparent);
+  border-radius: var(--radius-lg);
+}
+
+.message-wrapper {
+  animation: slideUp 0.4s ease-out;
+}
+
+/* User message style */
+.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent-gold));
+  color: var(--neutral-white);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--spacing-xs) var(--radius-xl);
+  max-width: 75%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  box-shadow: var(--shadow-md);
+  word-wrap: break-word;
+}
+
+/* Bot message style */
+.bot {
+  align-self: flex-start;
+  background-color: var(--beige-100);
+  color: var(--neutral-dark);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-xl) var(--spacing-xs);
+  max-width: 75%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  border: 1.5px solid var(--beige-300);
+  box-shadow: var(--shadow-sm);
+  word-wrap: break-word;
+}
+
+.bot p {
+  margin: 0.5rem 0;
+}
+
+.bot p:first-child {
+  margin-top: 0;
+}
+
+.bot p:last-child {
+  margin-bottom: 0;
+}
+
+/* Input area below messages */
+.input-area {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  border-top: 2px solid var(--beige-200);
+  background: var(--neutral-white);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+}
+
+/* Input field styling */
+.input-field {
+  flex: 1;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: 2px solid var(--beige-300);
+  border-radius: var(--radius-full);
+  background-color: var(--beige-50);
+  color: var(--neutral-dark);
+  font-size: 1rem;
+  font-family: var(--font-body);
+  transition: all var(--transition-base);
+}
+
+.input-field::placeholder {
+  color: var(--beige-600);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--accent-warm);
+  background-color: var(--neutral-white);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.1);
+}
+
+/* Button inside input area */
+.input-area button {
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(135deg, var(--accent-warm), var(--accent-gold));
+  color: var(--neutral-white);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+  letter-spacing: 0.03em;
+}
+
+.input-area button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.input-area button:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Generate Card Button */
+.generate-card-button {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-xl);
+  background: linear-gradient(135deg, var(--accent-sage), var(--success));
+  color: var(--neutral-white);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+  align-self: flex-start;
+}
+
+.generate-card-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Custom scrollbar */
+.messages::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: var(--beige-100);
+  border-radius: var(--radius-full);
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: var(--beige-400);
+  border-radius: var(--radius-full);
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: var(--beige-500);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .chat-section {
+    padding: var(--spacing-lg) var(--spacing-sm);
+  }
+
+  .chat-container {
+    width: 100%;
+    height: 85vh;
+    padding: var(--spacing-md);
+  }
+
+  .user,
+  .bot {
+    max-width: 85%;
+  }
+
+  .input-field {
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.9rem;
+  }
+
+  .input-area button {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    font-size: 0.9rem;
+  }
+
+  .generate-card-button {
+    font-size: 0.875rem;
+    padding: var(--spacing-sm) var(--spacing-lg);
+  }
+}
