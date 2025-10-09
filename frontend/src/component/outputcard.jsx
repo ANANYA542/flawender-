@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import "./OutputCard.css";
+import "./Outputcard.css";
 
 const OutputCard = () => {
   const location = useLocation();
