@@ -1,5 +1,5 @@
 {
-  "name": "flawender-backend",
+  "name": "@flawender/backend",
   "version": "1.0.0",
   "type": "module",
   "description": "Backend API for Flawender application",

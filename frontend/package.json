@@ -1,5 +1,5 @@
 {
-  "name": "flawender-frontend",
+  "name": "@flawender/frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
