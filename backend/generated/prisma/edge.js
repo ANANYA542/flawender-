@@ -86,6 +86,9 @@ Prisma.NullTypes = {
  * Enums
  */
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -167,6 +170,11 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
+};
+
 exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
@@ -217,7 +225,8 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": null
+    "rootEnvPath": null,
+    "schemaEnvPath": "../../.env"
   },
   "relativePath": "../../prisma",
   "clientVersion": "6.16.2",
@@ -225,18 +234,18 @@ const config = {
   "datasourceNames": [
     "db"
   ],
-  "activeProvider": "sqlite",
+  "activeProvider": "postgresql",
   "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
-        "fromEnvVar": null,
-        "value": "file:./dev.db"
+        "fromEnvVar": "DATABASE_URL",
+        "value": null
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../generated/prisma\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"sqlite\"\n  url      = \"file:./dev.db\"\n}\n\nmodel User {\n  id        Int       @id @unique @default(autoincrement())\n  name      String\n  email     String    @unique\n  password  String\n  bio       String?\n  isPrivate Boolean   @default(false)\n  createdAt DateTime  @default(now())\n  idea      Idea[]\n  likes     Like[]\n  comments  Comment[]\n\n  // Follow relationships\n  following Follow[] @relation(\"UserFollowing\")\n  followers Follow[] @relation(\"UserFollowers\")\n\n  // Follow requests\n  sentRequests     FollowRequest[] @relation(\"RequestSender\")\n  receivedRequests FollowRequest[] @relation(\"RequestReceiver\")\n\n  // Chat relationships\n  sentMessages     Message[]         @relation(\"MessageSender\")\n  receivedMessages Message[]         @relation(\"MessageReceiver\")\n  chatParticipants ChatParticipant[]\n}\n\nmodel Idea {\n  id          Int       @id @unique @default(autoincrement())\n  Description String\n  Verdict     String\n  Positive    String\n  Negative    String\n  user_id     Int\n  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  likes       Like[]\n  comments    Comment[]\n  createdAt   DateTime  @default(now())\n}\n\nmodel Like {\n  id        Int      @id @unique @default(autoincrement())\n  user_id   Int\n  idea_id   Int\n  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n\n  @@unique([user_id, idea_id])\n}\n\nmodel Comment {\n  id        Int      @id @unique @default(autoincrement())\n  text      String\n  user_id   Int\n  idea_id   Int\n  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n}\n\nmodel Follow {\n  id           Int      @id @unique @default(autoincrement())\n  follower_id  Int\n  following_id Int\n  follower     User     @relation(\"UserFollowing\", fields: [follower_id], references: [id], onDelete: Cascade)\n  following    User     @relation(\"UserFollowers\", fields: [following_id], references: [id], onDelete: Cascade)\n  createdAt    DateTime @default(now())\n\n  @@unique([follower_id, following_id])\n}\n\nmodel FollowRequest {\n  id          Int      @id @unique @default(autoincrement())\n  sender_id   Int\n  receiver_id Int\n  status      String   @default(\"pending\") // pending, accepted, rejected\n  sender      User     @relation(\"RequestSender\", fields: [sender_id], references: [id], onDelete: Cascade)\n  receiver    User     @relation(\"RequestReceiver\", fields: [receiver_id], references: [id], onDelete: Cascade)\n  createdAt   DateTime @default(now())\n\n  @@unique([sender_id, receiver_id])\n}\n\nmodel Chat {\n  id           Int               @id @unique @default(autoincrement())\n  name         String?\n  isGroup      Boolean           @default(false)\n  createdAt    DateTime          @default(now())\n  participants ChatParticipant[]\n  messages     Message[]\n}\n\nmodel ChatParticipant {\n  id       Int      @id @unique @default(autoincrement())\n  chat_id  Int\n  user_id  Int\n  joinedAt DateTime @default(now())\n  chat     Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)\n  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n\n  @@unique([chat_id, user_id])\n}\n\nmodel Message {\n  id          Int      @id @unique @default(autoincrement())\n  content     String\n  chat_id     Int\n  sender_id   Int\n  receiver_id Int?\n  chat        Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)\n  sender      User     @relation(\"MessageSender\", fields: [sender_id], references: [id], onDelete: Cascade)\n  receiver    User?    @relation(\"MessageReceiver\", fields: [receiver_id], references: [id], onDelete: Cascade)\n  createdAt   DateTime @default(now())\n}\n",
-  "inlineSchemaHash": "e63b16d29bb1804db7ecd1e7aa6698b57e64f919fcdef99d54c14b4fc676b23a",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../generated/prisma\"\n  binaryTargets = [\"native\", \"debian-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider  = \"postgresql\"\n  url       = env(\"DATABASE_URL\")\n  directUrl = env(\"DIRECT_URL\")\n}\n\nmodel User {\n  id        Int       @id @unique @default(autoincrement())\n  name      String\n  email     String    @unique\n  password  String\n  bio       String?\n  isPrivate Boolean   @default(false)\n  createdAt DateTime  @default(now())\n  idea      Idea[]\n  likes     Like[]\n  comments  Comment[]\n\n  // Follow relationships\n  following Follow[] @relation(\"UserFollowing\")\n  followers Follow[] @relation(\"UserFollowers\")\n\n  // Follow requests\n  sentRequests     FollowRequest[] @relation(\"RequestSender\")\n  receivedRequests FollowRequest[] @relation(\"RequestReceiver\")\n\n  // Chat relationships\n  sentMessages     Message[]         @relation(\"MessageSender\")\n  receivedMessages Message[]         @relation(\"MessageReceiver\")\n  chatParticipants ChatParticipant[]\n}\n\nmodel Idea {\n  id          Int       @id @unique @default(autoincrement())\n  Description String\n  Verdict     String\n  Positive    String\n  Negative    String\n  user_id     Int\n  user        User      @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  likes       Like[]\n  comments    Comment[]\n  createdAt   DateTime  @default(now())\n}\n\nmodel Like {\n  id        Int      @id @unique @default(autoincrement())\n  user_id   Int\n  idea_id   Int\n  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n\n  @@unique([user_id, idea_id])\n}\n\nmodel Comment {\n  id        Int      @id @unique @default(autoincrement())\n  text      String\n  user_id   Int\n  idea_id   Int\n  user      User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  idea      Idea     @relation(fields: [idea_id], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n}\n\nmodel Follow {\n  id           Int      @id @unique @default(autoincrement())\n  follower_id  Int\n  following_id Int\n  follower     User     @relation(\"UserFollowing\", fields: [follower_id], references: [id], onDelete: Cascade)\n  following    User     @relation(\"UserFollowers\", fields: [following_id], references: [id], onDelete: Cascade)\n  createdAt    DateTime @default(now())\n\n  @@unique([follower_id, following_id])\n}\n\nmodel FollowRequest {\n  id          Int      @id @unique @default(autoincrement())\n  sender_id   Int\n  receiver_id Int\n  status      String   @default(\"pending\") // pending, accepted, rejected\n  sender      User     @relation(\"RequestSender\", fields: [sender_id], references: [id], onDelete: Cascade)\n  receiver    User     @relation(\"RequestReceiver\", fields: [receiver_id], references: [id], onDelete: Cascade)\n  createdAt   DateTime @default(now())\n\n  @@unique([sender_id, receiver_id])\n}\n\nmodel Chat {\n  id           Int               @id @unique @default(autoincrement())\n  name         String?\n  isGroup      Boolean           @default(false)\n  createdAt    DateTime          @default(now())\n  participants ChatParticipant[]\n  messages     Message[]\n}\n\nmodel ChatParticipant {\n  id       Int      @id @unique @default(autoincrement())\n  chat_id  Int\n  user_id  Int\n  joinedAt DateTime @default(now())\n  chat     Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)\n  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n\n  @@unique([chat_id, user_id])\n}\n\nmodel Message {\n  id          Int      @id @unique @default(autoincrement())\n  content     String\n  chat_id     Int\n  sender_id   Int\n  receiver_id Int?\n  chat        Chat     @relation(fields: [chat_id], references: [id], onDelete: Cascade)\n  sender      User     @relation(\"MessageSender\", fields: [sender_id], references: [id], onDelete: Cascade)\n  receiver    User?    @relation(\"MessageReceiver\", fields: [receiver_id], references: [id], onDelete: Cascade)\n  createdAt   DateTime @default(now())\n}\n",
+  "inlineSchemaHash": "dc4a2194f366598a04f983d0e485bd0dd411d76d07203e3bd49d818003af42ec",
   "copyEngine": true
 }
 config.dirname = '/'
@@ -247,7 +256,9 @@ config.engineWasm = undefined
 config.compilerWasm = undefined
 
 config.injectableEdgeEnv = () => ({
-  parsed: {}
+  parsed: {
+    DATABASE_URL: typeof globalThis !== 'undefined' && globalThis['DATABASE_URL'] || typeof process !== 'undefined' && process.env && process.env.DATABASE_URL || undefined
+  }
 })
 
 if (typeof globalThis !== 'undefined' && globalThis['DEBUG'] || typeof process !== 'undefined' && process.env && process.env.DEBUG || undefined) {
