@@ -3,6 +3,8 @@ import cors from "cors";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import prisma from "./lib/prisma.js";
+import { config } from "dotenv";
+config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -30,12 +32,10 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-
 app.post("/api/auth/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-  
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
@@ -44,10 +44,8 @@ app.post("/api/auth/signup", async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
-
 
     const user = await prisma.user.create({
       data: {
@@ -56,7 +54,6 @@ app.post("/api/auth/signup", async (req, res) => {
         password: hashedPassword,
       },
     });
-
 
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name },
@@ -103,7 +100,9 @@ app.post("/api/auth/login", async (req, res) => {
     const token = jwt.sign(
       { userId: user.id, email: user.email, name: user.name },
       JWT_SECRET,
-      { expiresIn: "24h" }
+      {
+        expiresIn: "24h",
+      }
     );
 
     res.json({
@@ -313,7 +312,6 @@ app.post("/api/ideas/:ideaId/comment", authenticateToken, async (req, res) => {
   }
 });
 
-
 app.get("/api/ideas/leaderboard", async (req, res) => {
   try {
     const { period = "all" } = req.query;
@@ -375,7 +373,6 @@ app.get("/api/ideas/leaderboard", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
-
 
 app.get("/api/users", authenticateToken, async (req, res) => {
   try {
@@ -440,7 +437,6 @@ app.post("/api/users/:userId/follow", authenticateToken, async (req, res) => {
     }
 
     if (targetUser.isPrivate) {
-
       const existingRequest = await prisma.followRequest.findUnique({
         where: {
           sender_id_receiver_id: {
@@ -453,7 +449,6 @@ app.post("/api/users/:userId/follow", authenticateToken, async (req, res) => {
       if (existingRequest) {
         return res.status(400).json({ error: "Follow request already sent" });
       }
-
 
       await prisma.followRequest.create({
         data: {
@@ -499,7 +494,6 @@ app.delete("/api/users/:userId/follow", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Failed to unfollow user" });
   }
 });
-
 
 app.get("/api/follow-requests", authenticateToken, async (req, res) => {
   try {
@@ -547,7 +541,6 @@ app.post(
         return res.status(404).json({ error: "Request not found" });
       }
 
-   
       await prisma.follow.create({
         data: {
           follower_id: request.sender_id,
@@ -555,7 +548,6 @@ app.post(
         },
       });
 
-     
       await prisma.followRequest.update({
         where: { id: parseInt(requestId) },
         data: { status: "accepted" },
@@ -702,7 +694,6 @@ app.post("/api/chats", authenticateToken, async (req, res) => {
     const { participantId } = req.body;
     const userId = req.user.userId;
 
-
     const existingChat = await prisma.chat.findFirst({
       where: {
         isGroup: false,
@@ -717,7 +708,6 @@ app.post("/api/chats", authenticateToken, async (req, res) => {
     if (existingChat) {
       return res.json({ chat: existingChat });
     }
-
 
     const chat = await prisma.chat.create({
       data: {
@@ -751,7 +741,6 @@ app.get("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
   try {
     const { chatId } = req.params;
     const userId = req.user.userId;
-
 
     const participant = await prisma.chatParticipant.findFirst({
       where: {
@@ -792,7 +781,6 @@ app.post("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
     const { content } = req.body;
     const userId = req.user.userId;
 
-
     const participant = await prisma.chatParticipant.findFirst({
       where: {
         chat_id: parseInt(chatId),
@@ -827,6 +815,10 @@ app.post("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
   }
 });
 
+const __dirname = new URL(".", import.meta.url).pathname;
+
+app.use("/", express.static(__dirname + "/../frontend/dist"));
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on: http://localhost:${PORT}`);
 });
