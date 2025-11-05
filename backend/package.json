@@ -14,13 +14,12 @@
     "db:studio": "npx prisma studio"
   },
   "dependencies": {
-    "@prisma/client": "^6.16.2",
+    "@prisma/client": "^6.18.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "jsonwebtoken": "^9.0.2",
-    "prisma": "^6.16.2"
+    "jsonwebtoken": "^9.0.2"
   },
   "keywords": [
     "express",
@@ -29,5 +28,8 @@
     "sqlite"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "prisma": "^6.18.0"
+  }
 }
