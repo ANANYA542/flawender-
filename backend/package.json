@@ -5,8 +5,9 @@
   "description": "Backend API for Flawender application",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "vercel dev",
     "dev": "node server.js",
+    "build": "echo 'no build step needed'",
     "db:generate": "npx prisma generate",
     "db:push": "npx prisma db push",
     "db:migrate": "npx prisma migrate dev",

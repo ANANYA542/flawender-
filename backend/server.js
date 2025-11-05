@@ -815,10 +815,6 @@ app.post("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
   }
 });
 
-const __dirname = new URL(".", import.meta.url).pathname;
 
-app.use("/", express.static(__dirname + "/../frontend/dist"));
+export default app;
 
-app.listen(PORT, () => {
-  console.log(`Server running on: http://localhost:${PORT}`);
-});
