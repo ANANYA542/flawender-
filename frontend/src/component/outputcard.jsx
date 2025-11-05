@@ -32,7 +32,7 @@ const OutputCard = () => {
     );
   }
 
-  // Extract and organize sections
+
   const sections = {
     Description: [],
     "Honest Verdict Tagline": [],

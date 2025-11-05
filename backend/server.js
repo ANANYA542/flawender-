@@ -820,3 +820,4 @@ app.post("/api/chats/:chatId/messages", authenticateToken, async (req, res) => {
 
 export default app;
 
+app.listen(3000)

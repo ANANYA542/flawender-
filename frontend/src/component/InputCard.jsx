@@ -33,7 +33,7 @@ const ChatBot = () => {
     const userMessage = { sender: "user", text: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    const API_KEY = "AIzaSyC9EiCpg2gb21VhyYw_1xF9d_FfNbdkJls";
+    const API_KEY = "AIzaSyDpZeQtKG8IdKSCzHiuf3gxgfnjpI2sXqQ";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     const prompt = `You are an expert startup evaluator.
