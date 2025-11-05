@@ -31,7 +31,9 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
-
+app.get("/", (req, res) => {
+  res.send(" Flawender backend is live!");
+});
 app.post("/api/auth/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
