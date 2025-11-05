@@ -4,8 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import "./Home.css";
 import AuthDialog from "./AuthDialog";
 import UserProfiles from "./UserProfiles";
-
-const API_BASE_URL = "http://localhost:4000/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Home = () => {
   const { user, isAuthenticated, logout, token } = useAuth();
