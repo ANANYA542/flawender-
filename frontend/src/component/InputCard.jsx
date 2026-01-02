@@ -33,7 +33,14 @@ const ChatBot = () => {
     const userMessage = { sender: "user", text: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    const API_KEY = import.meta.env.API_KEY;
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+    if (!API_KEY) {
+      console.error("API Key is missing! Check your .env setup.");
+      alert("Configuration Error: VITE_GEMINI_API_KEY is missing. Please check .env file.");
+      return;
+    }
+
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     const prompt = `You are an expert startup evaluator.
@@ -78,6 +85,7 @@ Honest Verdict Tagline:
     };
 
     try {
+      console.log("Sending request to Gemini API...");
       const response = await fetch(url, {
         method: "POST",
         headers: {
@@ -86,7 +94,19 @@ Honest Verdict Tagline:
         body: JSON.stringify(payload),
       });
 
+      if (!response.ok) {
+         const errData = await response.json().catch(() => ({}));
+         console.error("Gemini API Error Response:", errData);
+         throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${JSON.stringify(errData)}`);
+      }
+
       const data = await response.json();
+      
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+          console.error("Invalid Gemini Response format:", data);
+          throw new Error("Invalid response format from Gemini API (no candidates)");
+      }
+
       const text = data.candidates[0].content.parts[0].text;
 
       const botMessage = {
@@ -116,6 +136,7 @@ Honest Verdict Tagline:
       }
 
       // Save idea to database
+      console.log("Saving idea to backend...");
       const saveResponse = await fetch(`${API_BASE_URL}/ideas`, {
         method: "POST",
         headers: {
@@ -127,14 +148,14 @@ Honest Verdict Tagline:
 
       if (!saveResponse.ok) {
         const error = await saveResponse.json();
-        throw new Error(error.error || "Failed to save idea");
+        throw new Error(`Backend Error: ${error.error || "Failed to save idea"}`);
       }
 
       const result = await saveResponse.json();
       console.log("Idea saved successfully:", result);
     } catch (error) {
-      console.error("Error evaluating or saving startup idea:", error);
-      alert("Failed to evaluate or save your startup idea.");
+      console.error("Transaction failed:", error);
+      alert(`Failed: ${error.message}`);
     }
 
     setInput("");
