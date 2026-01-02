@@ -33,7 +33,7 @@ const ChatBot = () => {
     const userMessage = { sender: "user", text: input };
     setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    const API_KEY = "AIzaSyDpZeQtKG8IdKSCzHiuf3gxgfnjpI2sXqQ";
+    const API_KEY = import.meta.env.API_KEY;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
     const prompt = `You are an expert startup evaluator.
@@ -117,17 +117,17 @@ Honest Verdict Tagline:
 
       // Save idea to database
       const saveResponse = await fetch(`${API_BASE_URL}/ideas`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(ideaData),
       });
 
       if (!saveResponse.ok) {
         const error = await saveResponse.json();
-        throw new Error(error.error || 'Failed to save idea');
+        throw new Error(error.error || "Failed to save idea");
       }
 
       const result = await saveResponse.json();
