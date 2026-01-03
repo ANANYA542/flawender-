@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, BarChart3, Users, Shield } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import heroDashboard from '../assets/hero-dashboard.png';
 
 const Home = () => {
   return (
@@ -35,37 +36,8 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="relative lg:h-[600px] w-full bg-gray-900 rounded-2xl shadow-2xl p-6 border border-gray-800 overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-500">
-              {/* Mock UI Dashboard inside Hero */}
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-900 to-gray-800" />
-              <div className="relative z-10 h-full flex flex-col">
-                <div className="flex items-center space-x-2 mb-6 border-b border-gray-700 pb-4">
-                   <div className="w-3 h-3 rounded-full bg-red-500" />
-                   <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                   <div className="w-3 h-3 rounded-full bg-green-500" />
-                   <span className="ml-4 text-gray-400 text-xs font-mono">analysis_report_v1.json</span>
-                </div>
-                <div className="flex-1 grid grid-cols-2 gap-4">
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <div className="h-24 bg-gradient-to-t from-blue-500/20 to-transparent rounded flex items-end">
-                             <div className="w-full h-1/2 bg-blue-500/40 rounded-t" />
-                        </div>
-                        <div className="mt-3 h-2 w-20 bg-gray-700 rounded" />
-                        <div className="mt-2 h-2 w-12 bg-gray-700 rounded" />
-                    </div>
-                    <div className="bg-gray-800/50 rounded-lg p-4 border border-gray-700">
-                        <div className="flex items-center justify-center h-24">
-                            <div className="w-16 h-16 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
-                        </div>
-                        <div className="mt-3 h-2 w-20 bg-gray-700 rounded" />
-                    </div>
-                    <div className="col-span-2 bg-gray-800/50 rounded-lg p-4 border border-gray-700 flex flex-col justify-center">
-                        <div className="h-2 w-full bg-gray-700 rounded mb-2" />
-                        <div className="h-2 w-3/4 bg-gray-700 rounded mb-2" />
-                        <div className="h-2 w-5/6 bg-gray-700 rounded" />
-                    </div>
-                </div>
-              </div>
+            <div className="relative lg:h-[600px] w-full bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden transform rotate-1 hover:rotate-0 transition-transform duration-500">
+              <img src={heroDashboard} alt="AI Analytics Dashboard" className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
             </div>
 
           </div>
