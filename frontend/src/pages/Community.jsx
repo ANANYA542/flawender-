@@ -1,6 +1,3 @@
-import React from 'react';
-import React, { useState } from 'react';
-import Header from '../components/Header';
 import React, { useState } from 'react';
 import Header from '../components/Header';
 import { useBackend } from '../context/BackendContext';
