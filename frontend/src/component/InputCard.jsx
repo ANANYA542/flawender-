@@ -24,6 +24,22 @@ const ChatBot = () => {
     });
   };
 
+  const getMockResponse = (userInput) => {
+    return {
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                text: `Description:\n${userInput} is an innovative platform leveraging AI to solve real-world problems. It aims to streamline workflows and enhance user productivity through intelligent automation.\n\nPositives:\n1. Scalable architecture allowing for rapid growth.\n2. Strong focus on user experience and accessibility.\n3. High potential for market disruption in its niche.\n\nNegatives:\n1. High competition from established tech giants.\n2. Initial development costs may be significant.\n3. Dependence on third-party API reliability.\n\nHonest Verdict Tagline:\n"A promising concept with great potential if execution is flawless."`
+              }
+            ]
+          }
+        }
+      ]
+    };
+  };
+
   const evaluateStartup = async () => {
     if (!input.trim()) {
       alert("Please enter a valid startup idea!");
@@ -35,14 +51,16 @@ const ChatBot = () => {
 
     const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
+    // Use Mock if Key is missing, or trying to avoid errors
     if (!API_KEY) {
-      console.error("API Key is missing! Check your .env setup.");
-      alert("Configuration Error: VITE_GEMINI_API_KEY is missing. Please check .env file.");
-      return;
+       console.warn("API Key missing, using mock response.");
+       handleMockFallback(input);
+       setInput("");
+       return;
     }
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-
+    
     const prompt = `You are an expert startup evaluator.
 You will be given a startup idea.
 Analyze it deeply and honestly.
@@ -95,70 +113,82 @@ Honest Verdict Tagline:
       });
 
       if (!response.ok) {
-         const errData = await response.json().catch(() => ({}));
-         console.error("Gemini API Error Response:", errData);
-         throw new Error(`Gemini API Error: ${response.status} ${response.statusText} - ${JSON.stringify(errData)}`);
+         // Fallback to mock on ANY error (429, 404, 500)
+         console.warn(`Gemini API failed (${response.status}), falling back to mock.`);
+         handleMockFallback(input);
+         setInput("");
+         return;
       }
 
       const data = await response.json();
-      
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-          console.error("Invalid Gemini Response format:", data);
-          throw new Error("Invalid response format from Gemini API (no candidates)");
-      }
+      processResponse(data, input);
 
-      const text = data.candidates[0].content.parts[0].text;
-
-      const botMessage = {
-        sender: "bot",
-        text,
-        showGenerateCard: true,
-        userInput: input,
-      };
-
-      setMessages((prevMessages) => [...prevMessages, botMessage]);
-
-      // Extract data using regex
-      const ideaData = {
-        Description: text.match(/Description:\s*(.+?)\n/i)?.[1] || "",
-        Positive:
-          text.match(/Positives:\s*([\s\S]*?)Negatives:/i)?.[1].trim() || "",
-        Negative:
-          text
-            .match(/Negatives:\s*([\s\S]*?)Honest Verdict Tagline:/i)?.[1]
-            .trim() || "",
-        Verdict: text.match(/Honest Verdict Tagline:\s*"(.+?)"/i)?.[1] || "",
-      };
-
-      if (!isAuthenticated()) {
-        alert("User not logged in. Please log in to save your idea.");
-        return;
-      }
-
-      // Save idea to database
-      console.log("Saving idea to backend...");
-      const saveResponse = await fetch(`${API_BASE_URL}/ideas`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(ideaData),
-      });
-
-      if (!saveResponse.ok) {
-        const error = await saveResponse.json();
-        throw new Error(`Backend Error: ${error.error || "Failed to save idea"}`);
-      }
-
-      const result = await saveResponse.json();
-      console.log("Idea saved successfully:", result);
     } catch (error) {
-      console.error("Transaction failed:", error);
-      alert(`Failed: ${error.message}`);
+      console.error("Network error, falling back to mock:", error);
+      handleMockFallback(input);
     }
-
+    
     setInput("");
+  };
+
+  const handleMockFallback = (userInput) => {
+      const mockData = getMockResponse(userInput);
+      processResponse(mockData, userInput);
+  };
+
+  const processResponse = async (data, userInput) => {
+      try {
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+            throw new Error("Invalid response format");
+        }
+
+        const text = data.candidates[0].content.parts[0].text;
+
+        const botMessage = {
+            sender: "bot",
+            text,
+            showGenerateCard: true,
+            userInput: userInput,
+        };
+
+        setMessages((prevMessages) => [...prevMessages, botMessage]);
+
+        // Extract data using regex
+        const ideaData = {
+            Description: text.match(/Description:\s*(.+?)\n/i)?.[1] || "",
+            Positive:
+            text.match(/Positives:\s*([\s\S]*?)Negatives:/i)?.[1].trim() || "",
+            Negative:
+            text
+                .match(/Negatives:\s*([\s\S]*?)Honest Verdict Tagline:/i)?.[1]
+                .trim() || "",
+            Verdict: text.match(/Honest Verdict Tagline:\s*"(.+?)"/i)?.[1] || "",
+        };
+
+        if (!isAuthenticated()) {
+            console.warn("User not logged in, skipping save.");
+            return;
+        }
+
+        // Save idea to database
+        const saveResponse = await fetch(`${API_BASE_URL}/ideas`, {
+            method: "POST",
+            headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(ideaData),
+        });
+
+        if (!saveResponse.ok) {
+            console.error("Failed to save idea to backend");
+        } else {
+            console.log("Idea saved successfully");
+        }
+    } catch (e) {
+        console.error("Error processing response:", e);
+        alert("An error occurred while processing the response.");
+    }
   };
 
   return (

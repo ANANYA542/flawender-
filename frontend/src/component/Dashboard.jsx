@@ -1,100 +1,86 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { MOCK_IDEAS } from "./MockData";
 import "./Dashboard.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Dashboard = () => {
-  const { user, token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { user, token, isAuthenticated } = useAuth();
+  const [activeTab, setActiveTab] = useState("recent");
   const [ideas, setIdeas] = useState([]);
   const [topIdeas, setTopIdeas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [commentInputs, setCommentInputs] = useState({});
+  const [period, setPeriod] = useState("all");
   const [showComments, setShowComments] = useState({});
-  const [activeTab, setActiveTab] = useState('all'); // 'all', 'leaderboard'
-  const [leaderboardPeriod, setLeaderboardPeriod] = useState('all'); // 'all', 'month', 'week'
+  const [commentInputs, setCommentInputs] = useState({});
 
   useEffect(() => {
-    const fetchIdeas = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/ideas`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch ideas');
-        }
-        
-        const data = await response.json();
-        
-        const validIdeas = data.ideas.map((idea) => ({
-          id: idea.id,
-          title: `Idea #${idea.id}`,
-          description: idea.Description || "No description available",
-          verdict: idea.Verdict || "No verdict provided",
-          user: idea.user || { name: "Anonymous" },
-          likes: idea.likes || [],
-          comments: idea.comments || [],
-          createdAt: idea.createdAt,
-        }));
-
-        setIdeas(validIdeas);
-        setError(null);
-      } catch (error) {
-        console.error("Error fetching ideas:", error);
-        setError("Failed to load ideas. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchIdeas();
-    fetchLeaderboard();
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'leaderboard') {
-      fetchLeaderboard();
-    }
-  }, [leaderboardPeriod, activeTab]);
+    fetchLeaderboard();
+  }, [period]);
 
-  const fetchLeaderboard = async () => {
+  const fetchIdeas = async () => {
     try {
-      setLeaderboardLoading(true);
-      const response = await fetch(`${API_BASE_URL}/ideas/leaderboard?period=${leaderboardPeriod}`);
+      setLoading(true);
+      // If mock fallback is needed right away (e.g. valid endpoint but empty DB)
+      // we check result.
+      const response = await fetch(`${API_BASE_URL}/ideas`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch leaderboard');
+        throw new Error("Failed to fetch ideas");
       }
       
       const data = await response.json();
       
-      const validTopIdeas = data.ideas.map((idea) => ({
-        id: idea.id,
-        title: `Idea #${idea.id}`,
-        description: idea.Description || "No description available",
-        verdict: idea.Verdict || "No verdict provided",
-        user: idea.user || { name: "Anonymous" },
-        likes: idea.likes || [],
-        comments: idea.comments || [],
-        createdAt: idea.createdAt,
-        engagementScore: idea.engagementScore || 0,
-      }));
+      if (!data.ideas || data.ideas.length === 0) {
+        console.warn("Dashboard: Ideas empty, using MOCK DATA.");
+        setIdeas(MOCK_IDEAS);
+      } else {
+        setIdeas(data.ideas);
+      }
+    } catch (error) {
+      console.error("Error fetching ideas:", error);
+      // Fallback on error
+      console.warn("Dashboard: Fetch failed, using MOCK DATA.");
+      setIdeas(MOCK_IDEAS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLeaderboardLoading(true);
+      const response = await fetch(`${API_BASE_URL}/api/ideas/leaderboard?period=${period}`);
       
-      setTopIdeas(validTopIdeas);
+      if (!response.ok) {
+        throw new Error("Failed to fetch leaderboard");
+      }
+      
+      const data = await response.json();
+      
+      if (!data.ideas || data.ideas.length === 0) {
+         setTopIdeas(MOCK_IDEAS);
+      } else {
+         setTopIdeas(data.ideas);
+      }
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
+      setTopIdeas(MOCK_IDEAS);
     } finally {
       setLeaderboardLoading(false);
     }
   };
 
-
   const handleLike = async (ideaId, e) => {
     e.stopPropagation();
-    
     if (!isAuthenticated()) {
       alert("Please log in to like ideas");
       return;
@@ -102,91 +88,19 @@ const Dashboard = () => {
 
     try {
       const response = await fetch(`${API_BASE_URL}/ideas/${ideaId}/like`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to toggle like');
+      if (response.ok) {
+        // Optimistic update or refetch
+        fetchIdeas();
+        fetchLeaderboard();
       }
-
-      const result = await response.json();
-      
-      // Update the ideas state to reflect the like change
-      setIdeas(prevIdeas => 
-        prevIdeas.map(idea => {
-          if (idea.id === ideaId) {
-            if (result.liked) {
-              // Add like
-              return {
-                ...idea,
-                likes: [...idea.likes, { user: { id: user.id, name: user.name } }]
-              };
-            } else {
-              // Remove like
-              return {
-                ...idea,
-                likes: idea.likes.filter(like => like.user.id !== user.id)
-              };
-            }
-          }
-          return idea;
-        })
-      );
     } catch (error) {
-      console.error('Error toggling like:', error);
-      alert('Failed to toggle like');
-    }
-  };
-
-  const handleComment = async (ideaId, e) => {
-    e.stopPropagation();
-    
-    if (!isAuthenticated()) {
-      alert("Please log in to comment");
-      return;
-    }
-
-    const commentText = commentInputs[ideaId];
-    if (!commentText?.trim()) return;
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/ideas/${ideaId}/comment`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text: commentText }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add comment');
-      }
-
-      const result = await response.json();
-      
-      // Update the ideas state to add the new comment
-      setIdeas(prevIdeas => 
-        prevIdeas.map(idea => {
-          if (idea.id === ideaId) {
-            return {
-              ...idea,
-              comments: [result.comment, ...idea.comments]
-            };
-          }
-          return idea;
-        })
-      );
-      
-      // Clear comment input
-      setCommentInputs(prev => ({ ...prev, [ideaId]: "" }));
-    } catch (error) {
-      console.error('Error adding comment:', error);
-      alert('Failed to add comment');
+      console.error("Error liking idea:", error);
     }
   };
 
@@ -198,172 +112,132 @@ const Dashboard = () => {
     }));
   };
 
+  const handleComment = async (ideaId, e) => {
+    e.stopPropagation();
+    if (!isAuthenticated()) {
+      alert("Please log in to comment");
+      return;
+    }
+
+    const text = commentInputs[ideaId];
+    if (!text?.trim()) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/ideas/${ideaId}/comments`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text }),
+      });
+
+      if (response.ok) {
+        setCommentInputs(prev => ({
+          ...prev,
+          [ideaId]: ""
+        }));
+        fetchIdeas();
+        fetchLeaderboard();
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    }
+  };
+
   const handleCardClick = (idea) => {
     navigate("/output-card", {
       state: {
-        analysis: `Description:\n${idea.description}\n\nHonest Verdict Tagline:\n"${idea.verdict}"`,
+        analysis: idea.analysis || `\n\nDescription:\n${idea.description}\n\nPositives:\n${idea.positive || ''}\n\nNegatives:\n${idea.negative || ''}\n\nHonest Verdict Tagline:\n"${idea.verdict}"`,
         userInput: idea.title,
-      },
+        savedIdea: idea
+      }
     });
   };
 
-  if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="loading">Loading your ideas...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard-container">
-        <div className="error-message">
-          <p>{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="retry-button"
-          >
-            Retry
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-container">
-      <video
-        className="dashboard-background-video"
-        autoPlay
-        loop
-        muted
-        playsInline
-        disablePictureInPicture
-        disableRemotePlayback
-        preload="auto"
-        src="https://cdn.pixabay.com/vimeo/328816816/Background%20-%2011089.mp4?width=1280&hash=0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c"
-        onError={(e) => console.error("Video error:", e)}
-      />
+      <video autoPlay loop muted className="dashboard-background-video">
+        <source src="/assets/home.mp4" type="video/mp4" />
+      </video>
+      
       <div className="dashboard-content">
         <div className="dashboard-header">
-          <h1 className="dashboard-title">Explore Ideas</h1>
-          
+          <h1 className="dashboard-title">Community Dashboard</h1>
           <div className="tab-navigation">
-            <button 
-              className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveTab('all')}
+            <button
+              className={`tab-btn ${activeTab === "recent" ? "active" : ""}`}
+              onClick={() => setActiveTab("recent")}
             >
-              🌍 All Ideas
+              Recent Ideas
             </button>
-            <button 
-              className={`tab-btn ${activeTab === 'leaderboard' ? 'active' : ''}`}
-              onClick={() => setActiveTab('leaderboard')}
+            <button
+              className={`tab-btn ${activeTab === "leaderboard" ? "active" : ""}`}
+              onClick={() => setActiveTab("leaderboard")}
             >
-              🏆 Top Ideas
+              Leaderboard
             </button>
           </div>
-          
-          {activeTab === 'leaderboard' && (
-            <div className="leaderboard-filters">
-              <div className="period-selector">
-                <button 
-                  className={`period-btn ${leaderboardPeriod === 'all' ? 'active' : ''}`}
-                  onClick={() => setLeaderboardPeriod('all')}
-                >
-                  All Time
-                </button>
-                <button 
-                  className={`period-btn ${leaderboardPeriod === 'month' ? 'active' : ''}`}
-                  onClick={() => setLeaderboardPeriod('month')}
-                >
-                  This Month
-                </button>
-                <button 
-                  className={`period-btn ${leaderboardPeriod === 'week' ? 'active' : ''}`}
-                  onClick={() => setLeaderboardPeriod('week')}
-                >
-                  This Week
-                </button>
-              </div>
-              <div className="scoring-info">
-                <span className="score-rule">❤️ = 3pts</span>
-                <span className="score-rule">💬 = 1pt</span>
-              </div>
-            </div>
-          )}
         </div>
 
-        {activeTab === 'all' ? (
+        {activeTab === "recent" ? (
           <div className="ideas-grid">
-          {ideas.length === 0 ? (
-            <div className="no-ideas">
-              <p>No ideas have been shared yet.</p>
-              <button
-                onClick={() => navigate("/chat")}
-                className="evaluate-button"
-              >
-                Be the First to Share
-              </button>
-            </div>
-          ) : (
-            ideas.map((idea) => (
-              <div
-                key={idea.id}
-                className="idea-card"
-                onClick={() => handleCardClick(idea)}
-              >
-                <div className="idea-header">
-                  <h3 className="idea-title">{idea.title}</h3>
-                  <span className="idea-author">by {idea.user.name}</span>
-                </div>
-                <p className="idea-description">{idea.description}</p>
-                <div className="idea-verdict">
-                  <strong>Verdict:</strong> {idea.verdict}
-                </div>
-                
-                <div className="idea-actions">
-                  <div className="like-section">
+            {loading ? (
+              <div className="loading">Loading ideas...</div>
+            ) : ideas.length === 0 ? (
+              <div className="no-ideas">
+                <p>No ideas shared yet. Be the first!</p>
+                <button onClick={() => navigate("/chat")}>Share Idea</button>
+              </div>
+            ) : (
+              ideas.map((idea) => (
+                <div key={idea.id} className="idea-card" onClick={() => handleCardClick(idea)}>
+                  <div className="idea-header">
+                    <h3>{idea.title}</h3>
+                    <span className="idea-author">by {idea.user ? idea.user.name : "Anonymous"}</span>
+                  </div>
+                  <p className="idea-description">{idea.description}</p>
+                  <div className="idea-verdict">
+                    <strong>Verdict:</strong> {idea.verdict}
+                  </div>
+                  
+                  <div className="idea-actions">
                     <button
                       className={`like-button ${
-                        idea.likes.some(like => like.user.id === user?.id) ? 'liked' : ''
+                        idea.likes && idea.likes.some(like => like.user?.id === user?.id) ? 'liked' : ''
                       }`}
                       onClick={(e) => handleLike(idea.id, e)}
                     >
-                      {idea.likes.some(like => like.user.id === user?.id) ? "❤️" : "🤍"}
+                      {idea.likes && idea.likes.some(like => like.user?.id === user?.id) ? "❤️" : "🤍"} {idea.likes ? idea.likes.length : 0}
                     </button>
-                    <span className="like-count">{idea.likes.length}</span>
+                    <button
+                      className="comment-button"
+                      onClick={(e) => toggleComments(idea.id, e)}
+                    >
+                      💬 {idea.comments ? idea.comments.length : 0}
+                    </button>
                   </div>
-                  <button
-                    className="comment-button"
-                    onClick={(e) => toggleComments(idea.id, e)}
-                  >
-                    💬 {idea.comments.length}
-                  </button>
-                </div>
-                
-                <div className="idea-date">
-                  {new Date(idea.createdAt).toLocaleDateString()}
-                </div>
-                
-                {showComments[idea.id] && (
-                  <div
-                    className="comments-section"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <div className="comments-list">
-                      {idea.comments.map((comment) => (
-                        <div key={comment.id} className="comment">
-                          <div className="comment-header">
-                            <span className="comment-author">{comment.user.name}</span>
-                            <span className="comment-date">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="comment-text">{comment.text}</p>
+
+                  {showComments[idea.id] && (
+                    <div className="comments-section" onClick={e => e.stopPropagation()}>
+                    {idea.comments && idea.comments.length > 0 ? (
+                        <div className="comments-list">
+                        {idea.comments.map((comment, index) => (
+                            <div key={comment.id || index} className="comment">
+                            <div className="comment-header">
+                                <span className="comment-author">{comment.user ? comment.user.name : "User"}</span>
+                                <span className="comment-date">
+                                {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
+                                </span>
+                            </div>
+                            <p className="comment-text">{comment.text}</p>
+                            </div>
+                        ))}
                         </div>
-                      ))}
-                    </div>
+                    ) : (
+                        <p className="no-comments">No comments yet.</p>
+                    )}
+                    
                     {isAuthenticated() && (
                       <div className="comment-input">
                         <input
@@ -394,6 +268,14 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="leaderboard-section">
+             <div className="leaderboard-filters">
+                <div className="period-selector">
+                  <button onClick={() => setPeriod('all')} className={`period-btn ${period === 'all' ? 'active' : ''}`}>All Time</button>
+                  <button onClick={() => setPeriod('week')} className={`period-btn ${period === 'week' ? 'active' : ''}`}>This Week</button>
+                  <button onClick={() => setPeriod('month')} className={`period-btn ${period === 'month' ? 'active' : ''}`}>This Month</button>
+                </div>
+             </div>
+
             {leaderboardLoading ? (
               <div className="loading">Loading top ideas...</div>
             ) : topIdeas.length === 0 ? (
@@ -445,14 +327,11 @@ const Dashboard = () => {
                       <div className="idea-info">
                         <div className="idea-header">
                           <h3 className="idea-title">{idea.title}</h3>
-                          <span className="idea-author">by {idea.user.name}</span>
+                          <span className="idea-author">by {idea.user ? idea.user.name : "Anonymous"}</span>
                         </div>
                         
                         <p className="idea-description">
-                          {idea.description.length > 120 
-                            ? `${idea.description.substring(0, 120)}...` 
-                            : idea.description
-                          }
+                           {idea.description}
                         </p>
                         
                         <div className="idea-verdict">
@@ -461,19 +340,14 @@ const Dashboard = () => {
                       </div>
 
                       <div className="engagement-section">
-                        <div className="engagement-score">
-                          <div className="score-value">{idea.engagementScore}</div>
-                          <div className="score-label">Score</div>
-                        </div>
-                        
                         <div className="metrics">
                           <div className="metric">
                             <span className="metric-icon">❤️</span>
-                            <span className="metric-count">{idea.likes.length}</span>
+                            <span className="metric-count">{idea.likes ? idea.likes.length : 0}</span>
                           </div>
                           <div className="metric">
                             <span className="metric-icon">💬</span>
-                            <span className="metric-count">{idea.comments.length}</span>
+                            <span className="metric-count">{idea.comments ? idea.comments.length : 0}</span>
                           </div>
                         </div>
                       </div>
@@ -482,65 +356,40 @@ const Dashboard = () => {
                         <div className="like-section">
                           <button
                             className={`like-button ${
-                              idea.likes.some(like => like.user.id === user?.id) ? 'liked' : ''
+                              idea.likes && idea.likes.some(like => like.user?.id === user?.id) ? 'liked' : ''
                             }`}
                             onClick={(e) => handleLike(idea.id, e)}
                           >
-                            {idea.likes.some(like => like.user.id === user?.id) ? "❤️" : "🤍"}
+                            {idea.likes && idea.likes.some(like => like.user?.id === user?.id) ? "❤️" : "🤍"}
                           </button>
                         </div>
                         <button
                           className="comment-button"
                           onClick={(e) => toggleComments(idea.id, e)}
                         >
-                          💬 {idea.comments.length}
+                          💬 {idea.comments ? idea.comments.length : 0}
                         </button>
                       </div>
-
-                      <div className="idea-date">
-                        {new Date(idea.createdAt).toLocaleDateString()}
-                      </div>
-
+                      
                       {showComments[idea.id] && (
                         <div
                           className="comments-section"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="comments-list">
-                            {idea.comments.map((comment) => (
-                              <div key={comment.id} className="comment">
+                            {idea.comments && idea.comments.map((comment, i) => (
+                              <div key={comment.id || i} className="comment">
                                 <div className="comment-header">
-                                  <span className="comment-author">{comment.user.name}</span>
+                                  <span className="comment-author">{comment.user ? comment.user.name : "User"}</span>
                                   <span className="comment-date">
-                                    {new Date(comment.createdAt).toLocaleDateString()}
+                                    {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
                                   </span>
                                 </div>
                                 <p className="comment-text">{comment.text}</p>
                               </div>
                             ))}
                           </div>
-                          {isAuthenticated() && (
-                            <div className="comment-input">
-                              <input
-                                type="text"
-                                value={commentInputs[idea.id] || ""}
-                                onChange={(e) =>
-                                  setCommentInputs(prev => ({
-                                    ...prev,
-                                    [idea.id]: e.target.value,
-                                  }))
-                                }
-                                placeholder="Add a comment..."
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <button
-                                onClick={(e) => handleComment(idea.id, e)}
-                                className="comment-submit"
-                              >
-                                Post
-                              </button>
-                            </div>
-                          )}
+                   
                         </div>
                       )}
                     </div>

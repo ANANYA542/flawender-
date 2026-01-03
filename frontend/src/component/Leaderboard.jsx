@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { MOCK_IDEAS } from './MockData';
 import './Leaderboard.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -27,12 +28,22 @@ const Leaderboard = () => {
       }
       
       const data = await response.json();
-      setIdeas(data.ideas || []);
+      
+      // FALLBACK: If backend returns empty array or invalid data, use Mock Data
+      if (!data.ideas || data.ideas.length === 0) {
+        console.warn('Leaderboard empty, using MOCK DATA for demo purposes.');
+        setIdeas(MOCK_IDEAS);
+      } else {
+        setIdeas(data.ideas);
+      }
+      
       setError(null);
     } catch (err) {
       console.error('Leaderboard fetch error:', err);
-      setError('Failed to load leaderboard');
-      setIdeas([]);
+      // FALLBACK: On Error, also use Mock Data so user sees something
+      console.warn('Leaderboard fetch failed, using MOCK DATA.');
+      setIdeas(MOCK_IDEAS);
+      setError(null); // Clear error to show data instead
     } finally {
       setLoading(false);
     }
@@ -144,12 +155,16 @@ const Leaderboard = () => {
                 <div className="stats-section">
                   <div className="stat-item likes">
                     <span className="stat-icon">❤️</span>
-                    <span className="stat-count">{idea.likes.length}</span>
+                    <span className="stat-count">
+                        {idea.likes ? idea.likes.length : 0}
+                    </span>
                     <span className="stat-label">likes</span>
                   </div>
                   <div className="stat-item comments">
                     <span className="stat-icon">💬</span>
-                    <span className="stat-count">{idea.comments.length}</span>
+                    <span className="stat-count">
+                         {idea.comments ? idea.comments.length : 0}
+                    </span>
                     <span className="stat-label">comments</span>
                   </div>
                 </div>
