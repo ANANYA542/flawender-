@@ -1,38 +1,36 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import ChatBot from "./component/InputCard";
-import OutputCard from "./component/outputcard";
-import Home from "./component/home";
-import Features from "./component/Features";
-import Dashboard from "./component/Dashboard";
-import Leaderboard from "./component/Leaderboard";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import { BackendProvider } from './context/BackendContext';
+import Home from './pages/Home';
+import Login from './pages/Auth/Login';
+import Signup from './pages/Auth/Signup';
+import Feed from './pages/Feed';
+import Evaluate from './pages/Evaluate';
+import IdeaDetails from './pages/IdeaDetails';
+import Leaderboard from './pages/Leaderboard';
+import Community from './pages/Community';
+import UserProfile from './pages/UserProfile';
 
-const App = () => {
-  const [botDictionary, setBotDictionary] = useState(null);
-
+function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/leaderboard" element={<Leaderboard />} />
-          <Route
-            path="/chat"
-            element={
-              <>
-                <ChatBot setBotDictionary={setBotDictionary} />
-                {/* <OutputCard botDictionary={botDictionary} /> */}
-              </>
-            }
-          />
-          <Route path="/output-card" element={<OutputCard />} />
-        </Routes>
-      </Router>
+      <BackendProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/evaluate" element={<Evaluate />} />
+            <Route path="/idea/:id" element={<IdeaDetails />} />
+            <Route path="/leaderboard" element={<Leaderboard />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/profile/:userId" element={<UserProfile />} />
+          </Routes>
+        </Router>
+      </BackendProvider>
     </AuthProvider>
   );
-};
+}
 
 export default App;

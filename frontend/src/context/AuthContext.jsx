@@ -1,62 +1,62 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-const AuthContext = createContext()
+const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
-}
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null)
-  const [token, setToken] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing token in localStorage
-    const storedToken = localStorage.getItem('token')
-    const storedUser = localStorage.getItem('user')
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+    // Check for stored user
+    const storedUser = localStorage.getItem('flawender_user');
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
     }
-    setLoading(false)
-  }, [])
+    setLoading(false);
+  }, []);
 
-  const login = (userData, authToken) => {
-    setUser(userData)
-    setToken(authToken)
-    localStorage.setItem('token', authToken)
-    localStorage.setItem('user', JSON.stringify(userData))
-  }
+  const login = async (email, password) => {
+    // Mock login logic
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        if (email === 'demo@flawender.com' && password === 'password') {
+           const userData = { id: '1', name: 'Demo User', email, avatar: 'https://ui-avatars.com/api/?name=Demo+User' };
+           setUser(userData);
+           localStorage.setItem('flawender_user', JSON.stringify(userData));
+           resolve(userData);
+        } else {
+            // Allow any login for demo purposes if not specific demo user
+            const userData = { id: Date.now().toString(), name: email.split('@')[0], email, avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}` };
+            setUser(userData);
+            localStorage.setItem('flawender_user', JSON.stringify(userData));
+            resolve(userData);
+        }
+      }, 800);
+    });
+  };
+
+  const signup = async (name, email, password) => {
+      // Mock signup logic
+      return new Promise((resolve) => {
+          setTimeout(() => {
+              const userData = { id: Date.now().toString(), name, email, avatar: `https://ui-avatars.com/api/?name=${name}` };
+              setUser(userData);
+              localStorage.setItem('flawender_user', JSON.stringify(userData));
+              resolve(userData);
+          }, 800);
+      });
+  };
 
   const logout = () => {
-    setUser(null)
-    setToken(null)
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-  }
-
-  const isAuthenticated = () => {
-    return !!token && !!user
-  }
-
-  const value = {
-    user,
-    token,
-    login,
-    logout,
-    isAuthenticated,
-    loading
-  }
+    setUser(null);
+    localStorage.removeItem('flawender_user');
+  };
 
   return (
-    <AuthContext.Provider value={value}>
-      {children}
+    <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+      {!loading && children}
     </AuthContext.Provider>
-  )
-}
+  );
+};
